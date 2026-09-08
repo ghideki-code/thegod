@@ -20,30 +20,35 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build frontend
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://thegod-indol.vercel.app' }}
         run: npm run build
 
-      - name: Install Hugging Face Hub CLI
-        run: python -m pip install --upgrade huggingface_hub
-
       - name: Prepare clean Static Space payload
         run: |
           rm -rf hf-static
-          mkdir -p hf-static
-          cp -R dist/. hf-static/
+          mkdir -p hf-static/assets
+          cp dist/index.html hf-static/index.html
+          cp -R dist/assets/. hf-static/assets/
           cp README.md hf-static/README.md
+
+      - name: Install Hugging Face Hub CLI
+        run: python -m pip install --upgrade huggingface_hub
 
       - name: Publish prebuilt frontend only
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          test -n "$HF_TOKEN"
+          test -f hf-static/index.html
+          test -d hf-static/assets
           hf upload amdk62/thegod hf-static . \
             --repo-type=space \
             --delete="*" \
-            --commit-message="deploy: publish prebuilt THEGOD frontend"
+            --commit-message="deploy: publish THEGOD static frontend"
