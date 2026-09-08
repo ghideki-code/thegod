@@ -1,4 +1,4 @@
-name: Sync THEGOD to Hugging Face
+name: Build and publish THEGOD frontend to Hugging Face
 
 on:
   push:
@@ -9,17 +9,29 @@ permissions:
   contents: read
 
 jobs:
-  sync:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout THEGOD
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Sync to Hugging Face Space
-        uses: huggingface/hub-sync@v0.1.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          github_repo_id: ${{ github.repository }}
-          huggingface_repo_id: amdk62/thegod
-          hf_token: ${{ secrets.HF_TOKEN }}
-          repo_type: space
-          space_sdk: static
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Install Hugging Face Hub CLI
+        run: python -m pip install --upgrade huggingface_hub
+
+      - name: Publish prebuilt frontend
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          hf upload amdk62/thegod dist . --repo-type=space --commit-message "deploy: publish THEGOD frontend"
