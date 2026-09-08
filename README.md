@@ -4,7 +4,10 @@ emoji: 📈
 colorFrom: blue
 colorTo: purple
 sdk: static
+app_build_command: npm install && npm run build
+app_file: dist/index.html
 pinned: false
+short_description: Terminal quantitativo híbrido para cripto
 ---
 
 # TheGod Protocol v2026
@@ -16,4 +19,5 @@ Terminal quantitativo híbrido para análise de criptoativos.
 - Paper Trading only
 - Real financial execution disabled
 
-This Space serves the web interface. The quantitative backend runs separately.
+This Space builds the React/Vite frontend and serves the generated `dist/index.html`.
+The quantitative backend runs separately.
