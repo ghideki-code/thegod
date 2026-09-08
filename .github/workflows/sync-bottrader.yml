@@ -1,0 +1,47 @@
+name: Sync from Bottrader
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout THEGOD
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch bottrader source
+        env:
+          SOURCE_GH_TOKEN: ${{ secrets.SOURCE_GH_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$SOURCE_GH_TOKEN"
+          git clone --depth 1 --branch rebuild/real-market-engine "https://x-access-token:${SOURCE_GH_TOKEN}@github.com/ghideki-code/bottrader.git" /tmp/bottrader
+
+      - name: Mirror application source
+        run: |
+          set -euo pipefail
+          rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            /tmp/bottrader/ ./
+
+      - name: Commit mirrored source
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+            exit 0
+          fi
+          git commit -m "sync: mirror bottrader rebuild into THEGOD"
+          git push origin main
