@@ -1,0 +1,1 @@
+Runtime validation identified an OKX instrument normalization issue for BTC/USDT. The fallback currently requests BTC-USDT-SWAP and the runtime reported an invalid candle payload. This marker is temporary and must be removed after the exchange client is corrected and CI/runtime validation passes.
