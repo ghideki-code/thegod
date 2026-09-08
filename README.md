@@ -4,8 +4,6 @@ emoji: 📈
 colorFrom: blue
 colorTo: purple
 sdk: static
-app_build_command: npm install && npm run build
-app_file: dist/index.html
 pinned: false
 short_description: Terminal quantitativo híbrido para cripto
 ---
@@ -19,5 +17,4 @@ Terminal quantitativo híbrido para análise de criptoativos.
 - Paper Trading only
 - Real financial execution disabled
 
-This Space builds the React/Vite frontend and serves the generated `dist/index.html`.
-The quantitative backend runs separately.
+The web bundle is built by GitHub Actions and uploaded directly to this Static Space. The quantitative backend runs separately.
