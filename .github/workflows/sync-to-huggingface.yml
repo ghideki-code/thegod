@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm install
@@ -29,8 +30,18 @@ jobs:
       - name: Install Hugging Face Hub CLI
         run: python -m pip install --upgrade huggingface_hub
 
-      - name: Publish prebuilt frontend
+      - name: Prepare clean Static Space payload
+        run: |
+          rm -rf hf-static
+          mkdir -p hf-static
+          cp -R dist/. hf-static/
+          cp README.md hf-static/README.md
+
+      - name: Publish prebuilt frontend only
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          hf upload amdk62/thegod dist . --repo-type=space --commit-message "deploy: publish THEGOD frontend"
+          hf upload amdk62/thegod hf-static . \
+            --repo-type=space \
+            --delete="*" \
+            --commit-message="deploy: publish prebuilt THEGOD frontend"
