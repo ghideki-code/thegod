@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "rewrites": [
-    { "source": "/api/quant/lab", "destination": "/api/quant-lab" }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
