@@ -32,7 +32,7 @@ export function buildQuantitativeLab(result: HistoricalBacktestResult, paperStat
   const backtest = backtestMetrics(result);
   const paper = paperMetrics(paperState);
   const deepAnalytics = candles.length <= 1200;
-  const includeMonteCarlo = candles.length <= 6000;
+  const includeMonteCarlo = candles.length <= 3000;
   return {
     generatedAt: Date.now(), symbol: result.symbol, backtest, paper,
     comparison: buildComparison(backtest, paper), quality: assessQuality(result),
