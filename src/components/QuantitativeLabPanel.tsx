@@ -44,7 +44,7 @@ export function QuantitativeLabPanel() {
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const refresh = useCallback(async () => { setLoading(true); setError(null); try { const res = await fetch(`/api/quant/lab?symbol=BTC%2FUSDT&days=${days}`); const data = await res.json(); if (!res.ok || !data.success) throw new Error(data.error || 'Falha no Quant Lab'); setLab(data); } catch (e) { setError(e instanceof Error ? e.message : 'Falha ao carregar laboratório'); } finally { setLoading(false); } }, [days]);
+  const refresh = useCallback(async () => { setLoading(true); setError(null); try { const res = await fetch(`/api/quant-lab?symbol=BTC%2FUSDT&days=${days}`); const data = await res.json(); if (!res.ok || !data.success) throw new Error(data.error || 'Falha no Quant Lab'); setLab(data); } catch (e) { setError(e instanceof Error ? e.message : 'Falha ao carregar laboratório'); } finally { setLoading(false); } }, [days]);
   const validate = useCallback(async () => { setValidating(true); setValidationError(null); try { const res = await fetch(`/api/quant/validate?symbol=BTC%2FUSDT&days=90&trainPercent=70`); const data = await res.json(); if (!res.ok || !data.success) throw new Error(data.error || 'Falha na validação OOS'); setValidation(data); } catch (e) { setValidationError(e instanceof Error ? e.message : 'Falha na validação OOS'); } finally { setValidating(false); } }, []);
   useEffect(() => { refresh(); }, [refresh]);
   const bt = lab?.backtest; const pp = lab?.paper; const q = lab?.quality; const equity = bt?.equityCurve ?? [];
