@@ -17,7 +17,7 @@ export interface QuantitativeLabResult {
   paper: QuantMetricSet & { initialCapital: number; equity: number; openPositions: number; halted: boolean; history: PaperTradingState['history'] };
   comparison: { netPnlDeltaPercent: number; winRateDeltaPercent: number; expectancyDeltaR: number; drawdownDeltaPercent: number; profitFactorDelta: number; status: 'ALIGNED' | 'DIVERGENT' | 'INSUFFICIENT_DATA'; reasons: string[] };
   quality: { score: number; grade: 'A' | 'B' | 'C' | 'D' | 'INSUFFICIENT_DATA'; checks: string[]; warnings: string[] };
-  regimes: RegimeAnalyticsResult; statistics: StatisticalAnalysisResult; robustness: RobustnessAnalysisResult; timeSeries: TimeSeriesAnalysisResult; walkForward?: WalkForwardAnalysisResult; stressTest?: StressTestResult; monteCarlo?: MonteCarloAnalysisResult; parameterSelection: RobustParameterSelectionResult;
+  regimes: RegimeAnalyticsResult; statistics: StatisticalAnalysisResult; robustness: RobustnessAnalysisResult; timeSeries: TimeSeriesAnalysisResult; walkForward: WalkForwardAnalysisResult; stressTest: StressTestResult; monteCarlo: MonteCarloAnalysisResult; parameterSelection: RobustParameterSelectionResult;
 }
 const finite = (v: number, fallback = 0) => Number.isFinite(v) ? v : fallback;
 const round = (v: number, d = 4) => Number(finite(v).toFixed(d));
@@ -28,18 +28,4 @@ function buildComparison(backtest: QuantitativeLabResult['backtest'], paper: Qua
 function assessQuality(result: HistoricalBacktestResult): QuantitativeLabResult['quality'] { if (result.totalTrades < 30) return { score: 0, grade: 'INSUFFICIENT_DATA', checks: [`Amostra: ${result.totalTrades} trades.`], warnings: ['Menos de 30 trades.'] }; let score = 0; const checks: string[] = []; const warnings: string[] = []; if (result.expectancyR > 0) { score += 25; checks.push('Expectancy positiva.'); } else warnings.push('Expectancy não é positiva.'); if (result.profitFactor > 1.2) { score += 20; checks.push('Profit Factor acima de 1.20.'); } else warnings.push('Profit Factor baixo.'); if (result.maxDrawdownPercent < 10) { score += 20; checks.push('Drawdown abaixo de 10%.'); } else warnings.push('Drawdown elevado.'); if (result.winRate >= 45) { score += 15; checks.push('Win rate >= 45%.'); } else warnings.push('Win rate abaixo de 45%.'); if (result.sharpeRatio > 1) { score += 10; checks.push('Sharpe acima de 1.'); } else warnings.push('Sharpe não supera 1.'); if (result.totalTrades >= 100) { score += 10; checks.push('Amostra >= 100 trades.'); } else warnings.push('Amostra ainda abaixo de 100 trades.'); const grade = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : 'D'; return { score, grade, checks, warnings }; }
 const baseOptions = { initialCapital: 10_000, riskPerTradePercent: 1, minScore: 35, minConfidence: 50, atrStopMultiple: 1.5, rewardRisk: 2, maxHoldingBars: 32, warmupBars: 220 } as const;
 const emptySelection = (): RobustParameterSelectionResult => ({ candidates: [], selected: null, baseline: null, stableRegion: { minScore: [], minConfidence: [], atrStopMultiple: [], rewardRisk: [], maxHoldingBars: [] }, grade: 'INSUFFICIENT_DATA', warnings: ['Otimização de parâmetros é executada apenas pela validação OOS.'] });
-export function buildQuantitativeLab(result: HistoricalBacktestResult, paperState: PaperTradingState, candles: Candle[]): QuantitativeLabResult {
-  const backtest = backtestMetrics(result);
-  const paper = paperMetrics(paperState);
-  const deepAnalytics = candles.length <= 1200;
-  const includeMonteCarlo = candles.length <= 3000;
-  return {
-    generatedAt: Date.now(), symbol: result.symbol, backtest, paper,
-    comparison: buildComparison(backtest, paper), quality: assessQuality(result),
-    regimes: analyzeRegimes(candles, result.trades), statistics: analyzeStatistics(result.trades), robustness: analyzeRobustness(result.trades), timeSeries: analyzeTimeSeries(result.trades),
-    walkForward: deepAnalytics ? runWalkForwardAnalysis(result.symbol, candles, baseOptions) : undefined,
-    stressTest: deepAnalytics ? runStressTest(result.symbol, candles, baseOptions) : undefined,
-    monteCarlo: includeMonteCarlo ? analyzeMonteCarlo(result.trades, 3000, baseOptions.riskPerTradePercent) : undefined,
-    parameterSelection: emptySelection(),
-  };
-}
+export function buildQuantitativeLab(result: HistoricalBacktestResult, paperState: PaperTradingState, candles: Candle[]): QuantitativeLabResult { const backtest = backtestMetrics(result); const paper = paperMetrics(paperState); return { generatedAt: Date.now(), symbol: result.symbol, backtest, paper, comparison: buildComparison(backtest, paper), quality: assessQuality(result), regimes: analyzeRegimes(candles, result.trades), statistics: analyzeStatistics(result.trades), robustness: analyzeRobustness(result.trades), timeSeries: analyzeTimeSeries(result.trades), walkForward: runWalkForwardAnalysis(result.symbol, candles, baseOptions), stressTest: runStressTest(result.symbol, candles, baseOptions), monteCarlo: analyzeMonteCarlo(result.trades, 3000, baseOptions.riskPerTradePercent), parameterSelection: emptySelection() }; }
