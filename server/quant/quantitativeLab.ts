@@ -17,7 +17,7 @@ export interface QuantitativeLabResult {
   paper: QuantMetricSet & { initialCapital: number; equity: number; openPositions: number; halted: boolean; history: PaperTradingState['history'] };
   comparison: { netPnlDeltaPercent: number; winRateDeltaPercent: number; expectancyDeltaR: number; drawdownDeltaPercent: number; profitFactorDelta: number; status: 'ALIGNED' | 'DIVERGENT' | 'INSUFFICIENT_DATA'; reasons: string[] };
   quality: { score: number; grade: 'A' | 'B' | 'C' | 'D' | 'INSUFFICIENT_DATA'; checks: string[]; warnings: string[] };
-  regimes: RegimeAnalyticsResult; statistics: StatisticalAnalysisResult; robustness: RobustnessAnalysisResult; timeSeries: TimeSeriesAnalysisResult; walkForward?: WalkForwardAnalysisResult; stressTest?: StressTestResult; monteCarlo: MonteCarloAnalysisResult; parameterSelection: RobustParameterSelectionResult;
+  regimes: RegimeAnalyticsResult; statistics: StatisticalAnalysisResult; robustness: RobustnessAnalysisResult; timeSeries: TimeSeriesAnalysisResult; walkForward?: WalkForwardAnalysisResult; stressTest?: StressTestResult; monteCarlo?: MonteCarloAnalysisResult; parameterSelection: RobustParameterSelectionResult;
 }
 const finite = (v: number, fallback = 0) => Number.isFinite(v) ? v : fallback;
 const round = (v: number, d = 4) => Number(finite(v).toFixed(d));
@@ -32,12 +32,14 @@ export function buildQuantitativeLab(result: HistoricalBacktestResult, paperStat
   const backtest = backtestMetrics(result);
   const paper = paperMetrics(paperState);
   const deepAnalytics = candles.length <= 1200;
+  const includeMonteCarlo = candles.length <= 6000;
   return {
     generatedAt: Date.now(), symbol: result.symbol, backtest, paper,
     comparison: buildComparison(backtest, paper), quality: assessQuality(result),
     regimes: analyzeRegimes(candles, result.trades), statistics: analyzeStatistics(result.trades), robustness: analyzeRobustness(result.trades), timeSeries: analyzeTimeSeries(result.trades),
     walkForward: deepAnalytics ? runWalkForwardAnalysis(result.symbol, candles, baseOptions) : undefined,
     stressTest: deepAnalytics ? runStressTest(result.symbol, candles, baseOptions) : undefined,
-    monteCarlo: analyzeMonteCarlo(result.trades, 3000, baseOptions.riskPerTradePercent), parameterSelection: emptySelection(),
+    monteCarlo: includeMonteCarlo ? analyzeMonteCarlo(result.trades, 3000, baseOptions.riskPerTradePercent) : undefined,
+    parameterSelection: emptySelection(),
   };
 }
